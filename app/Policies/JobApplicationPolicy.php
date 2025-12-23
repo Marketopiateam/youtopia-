@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\JobApplication;
+use App\Models\User;
+
+class JobApplicationPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+    }
+
+    public function view(User $user, JobApplication $application): bool
+    {
+        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+    }
+
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    public function update(User $user, JobApplication $application): bool
+    {
+        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+    }
+
+    public function delete(User $user, JobApplication $application): bool
+    {
+        return $user->hasAnyRole(['super_admin', 'admin']);
+    }
+}
