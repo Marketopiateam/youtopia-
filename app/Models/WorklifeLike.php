@@ -9,32 +9,22 @@ class WorklifeLike extends Model
 {
     protected $fillable = [
         'post_id',
-        'comment_id',
-        'employee_id',
+        'user_id',
     ];
 
+    /**
+     * Get the post that the like belongs to.
+     */
     public function post(): BelongsTo
     {
         return $this->belongsTo(WorklifePost::class);
     }
 
-    public function comment(): BelongsTo
+    /**
+     * Get the user who made the like.
+     */
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(WorklifeComment::class);
-    }
-
-    public function employee(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class);
-    }
-
-    public function scopeForPost($query, $postId)
-    {
-        return $query->where('post_id', $postId)->whereNull('comment_id');
-    }
-
-    public function scopeForComment($query, $commentId)
-    {
-        return $query->where('comment_id', $commentId);
+        return $this->belongsTo(User::class);
     }
 }

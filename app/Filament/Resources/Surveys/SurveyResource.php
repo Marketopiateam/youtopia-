@@ -24,6 +24,8 @@ class SurveyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationGroup = 'Communication';
+
     protected static ?string $recordTitleAttribute = 'id';
 
     public static function form(Schema $schema): Schema

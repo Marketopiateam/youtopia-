@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Enums\EmployeeStatus;
 use App\Models\Department;
 use App\Models\Employee;
-use App\Models\EmployeeProfile;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +13,6 @@ class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
-        // نتأكد إن في Departments
         $departments = Department::all();
 
         if ($departments->isEmpty()) {
@@ -22,59 +21,49 @@ class EmployeeSeeder extends Seeder
         }
 
         DB::transaction(function () use ($departments) {
-
-            // الحصول على جميع المدراء
-            $managerUsers = \App\Models\User::whereHas('roles', function($query) {
-                $query->where('name', 'manager');
+            // Get all non-admin users
+            $usersToBecomeEmployees = User::whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'admin');
             })->get();
 
-            $managerEmployees = $managerUsers->map(function($user) {
-                return $user->employee;
-            })->filter();
-
-            if ($managerEmployees->isEmpty()) {
-                $this->command->warn('No manager employees found, skipping EmployeeSeeder.');
+            if ($usersToBecomeEmployees->isEmpty()) {
+                $this->command->warn('No non-admin users found to create employees for.');
                 return;
             }
 
-            // آخر رقم موظف
+            $managerEmployees = Employee::whereHas('user.roles', function($query) {
+                $query->where('name', 'manager');
+            })->get();
+
             $lastEmployeeNumber = (int) (Employee::withTrashed()->max('employee_number') ?? 0);
 
-            // إنشاء 20 موظف وتوزيعهم على الـ5 مدراء (4 موظفين لكل مدير)
-            for ($i = 1; $i <= 20; $i++) {
+            foreach ($usersToBecomeEmployees as $index => $user) {
+                // Check if employee already exists for this user
+                if ($user->employee) {
+                    continue;
+                }
 
-                $employeeNumber = $lastEmployeeNumber + $i;
+                $employeeNumber = $lastEmployeeNumber + 1 + $index;
                 $department = $departments->random();
+                $hireDate = now()->subDays(rand(30, 500))->toDateString();
 
-                // توزيع الموظف على مدير (كل 4 موظفين لمدير واحد)
-                $managerIndex = ceil($i / 4) - 1; // 0, 0, 0, 0, 1, 1, 1, 1, ...
-                $managerEmployee = $managerEmployees->get($managerIndex);
+                $managerEmployeeId = null;
+                if ($managerEmployees->isNotEmpty()) {
+                    $managerEmployeeId = $managerEmployees->random()->id;
+                }
 
-                // إنشاء الموظف
-                $employee = Employee::create([
+                Employee::create([
+                    'user_id' => $user->id,
                     'employee_number' => $employeeNumber,
                     'employee_code'   => 'EMP-' . str_pad((string) $employeeNumber, 6, '0', STR_PAD_LEFT),
-
                     'status' => EmployeeStatus::Active->value,
-                    'hire_date' => now()->subDays(rand(30, 500))->toDateString(),
-
+                    'hire_date' => $hireDate,
                     'department_id' => $department->id,
-                    'manager_employee_id' => $managerEmployee?->id,
-                ]);
-
-                // إنشاء البروفايل
-                EmployeeProfile::create([
-                    'employee_id' => $employee->id,
-                    'first_name'  => fake()->firstName(),
-                    'last_name'   => fake()->lastName(),
-                    'phone'       => fake()->phoneNumber(),
-                    'email'       => fake()->safeEmail(),
-                    'birth_date'  => fake()->date('Y-m-d', '-22 years'),
-                    'address'     => fake()->address(),
+                    'manager_employee_id' => $managerEmployeeId,
                 ]);
             }
 
-            $this->command->info("Created 20 employees distributed across {$managerEmployees->count()} managers");
+            $this->command->info('Created employee records for non-admin users successfully.');
         });
     }
 }

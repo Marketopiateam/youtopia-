@@ -30,9 +30,9 @@ class OkrObjectiveSeeder extends Seeder
         OkrObjective::create([
             'cycle_id' => $cycles->first()->id,
             'title' => 'Achieve Product-Market Fit',
-            'scope' => OKRScope::COMPANY,
+            'scope' => OKRScope::Company,
             'owner_employee_id' => $employees->random()->id,
-            'status' => OKRStatus::IN_PROGRESS,
+            'status' => OKRStatus::Active,
         ]);
 
         // Department Objective
@@ -40,10 +40,10 @@ class OkrObjectiveSeeder extends Seeder
             OkrObjective::create([
                 'cycle_id' => $cycles->first()->id,
                 'title' => 'Increase Engineering Velocity',
-                'scope' => OKRScope::DEPARTMENT,
+                'scope' => OKRScope::Department,
                 'scope_id' => $departments->random()->id,
                 'owner_employee_id' => $employees->random()->id,
-                'status' => OKRStatus::IN_PROGRESS,
+                'status' => OKRStatus::Active,
             ]);
         }
 
@@ -51,10 +51,10 @@ class OkrObjectiveSeeder extends Seeder
         OkrObjective::create([
             'cycle_id' => $cycles->first()->id,
             'title' => 'Master Laravel Livewire',
-            'scope' => OKRScope::EMPLOYEE,
+            'scope' => OKRScope::Employee,
             'scope_id' => $employees->random()->id,
             'owner_employee_id' => $employees->random()->id,
-            'status' => OKRStatus::IN_PROGRESS,
+            'status' => OKRStatus::Active,
         ]);
     }
 }

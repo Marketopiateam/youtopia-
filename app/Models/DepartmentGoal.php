@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\GoalType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,7 +21,6 @@ class DepartmentGoal extends Model
     protected $casts = [
         'quarter' => 'integer',
         'year' => 'integer',
-        'status' => GoalType::class,
     ];
 
     public function department(): BelongsTo

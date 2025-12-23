@@ -41,6 +41,18 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
+            ->navigationGroups([
+                'Recruitment',
+                'Onboarding',
+                'Attendance',
+                'Payroll',
+                'Performance',
+                'Strategy',
+                'Meetings',
+                'Workflows',
+                'Social',
+                'Communication',
+            ])
             ->resourceCreatePageRedirect('index')
             ->resourceEditPageRedirect('index')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')

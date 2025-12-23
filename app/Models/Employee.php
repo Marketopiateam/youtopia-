@@ -97,5 +97,12 @@ class Employee extends Model
         return $this->manager?->user; // باستخدام relationship الحالي manager + user
     }
 
-
+    /**
+     * The Worklife groups that the employee belongs to.
+     */
+    public function worklifeGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(WorklifeGroup::class, 'worklife_group_employee', 'employee_id', 'worklife_group_id')
+            ->withTimestamps();
+    }
 }

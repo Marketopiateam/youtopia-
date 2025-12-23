@@ -35,6 +35,18 @@ class ManagerPanelProvider extends PanelProvider
             ->brandName('ماركتوبيا')
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->globalSearch(position: GlobalSearchPosition::Sidebar)
+            ->navigationGroups([
+                'Recruitment',
+                'Onboarding',
+                'Attendance',
+                'Payroll',
+                'Performance',
+                'Strategy',
+                'Meetings',
+                'Workflows',
+                'Social',
+                'Communication',
+            ])
             ->resourceCreatePageRedirect('index')
             ->resourceEditPageRedirect('index')
             ->databaseNotifications()

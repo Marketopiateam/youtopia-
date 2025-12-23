@@ -23,6 +23,7 @@ return new class extends Migration
             $table->index(['requestable_type', 'requestable_id']);
             $table->index(['status', 'current_step']);
             $table->index('requester_employee_id');
+            $table->softDeletes();
         });
     }
 

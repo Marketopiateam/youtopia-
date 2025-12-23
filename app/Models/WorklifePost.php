@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\WorklifePostType;
 use App\Enums\AudienceType;
+use App\Enums\WorklifePostType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -33,103 +34,119 @@ class WorklifePost extends Model
         'published_at' => 'datetime',
     ];
 
+    /**
+     * The author of the worklife post.
+     */
     public function author(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'author_employee_id');
     }
 
+    /**
+     * Get the parent source model (e.g., Announcement, Survey, Vote) for the post.
+     */
     public function source(): MorphTo
     {
         return $this->morphTo();
     }
 
+    /**
+     * Get the comments for the worklife post.
+     */
     public function comments(): HasMany
     {
-        return $this->hasMany(WorklifeComment::class)->orderBy('created_at');
+        return $this->hasMany(WorklifeComment::class);
     }
 
-    public function likes(): HasMany
+    /**
+     * Get the reactions for the worklife post.
+     */
+    public function reactions(): MorphMany
     {
-        return $this->hasMany(WorklifeLike::class);
+        return $this->morphMany(WorklifeReaction::class, 'reactable');
     }
 
-    public function reactions(): HasMany
+    /**
+     * Get the attachments for the worklife post.
+     */
+    public function attachments(): MorphMany
     {
-        return $this->hasMany(WorklifeReaction::class);
+        return $this->morphMany(WorklifeAttachment::class, 'attachable');
     }
 
-    public function attachments(): HasMany
+    /**
+     * Get the WorklifeGroup that this post is targeted to, if applicable.
+     */
+    public function audienceGroup(): BelongsTo
     {
-        return $this->hasMany(WorklifeAttachment::class);
+        return $this->belongsTo(WorklifeGroup::class, 'audience_id');
     }
 
-    public function isLikedBy(Employee $employee): bool
-    {
-        return $this->likes()->where('employee_id', $employee->id)->exists();
-    }
-
-    public function isReactedBy(Employee $employee, string $reactionType = null): bool
-    {
-        $query = $this->reactions()->where('employee_id', $employee->id);
-        if ($reactionType) {
-            $query->where('reaction_type', $reactionType);
-        }
-        return $query->exists();
-    }
-
-    public function toggleLike(Employee $employee)
-    {
-        if ($this->isLikedBy($employee)) {
-            $this->likes()->where('employee_id', $employee->id)->delete();
-            return false;
-        } else {
-            $this->likes()->create(['employee_id' => $employee->id]);
-            return true;
-        }
-    }
-
-    public function scopePublished($query)
+    /**
+     * Scope a query to include only published posts.
+     */
+    public function scopePublished(Builder $query): Builder
     {
         return $query->whereNotNull('published_at')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
-    public function scopePinned($query)
+    /**
+     * Scope a query to include only pinned posts.
+     */
+    public function scopePinned(Builder $query): Builder
     {
         return $query->where('is_pinned', true);
     }
 
-    public function scopeForAudience($query, Employee $employee)
+    /**
+     * Scope a query to include only active (published and not deleted) posts.
+     */
+    public function scopeActive(Builder $query): Builder
     {
-        return $query->where(function ($q) use ($employee) {
+        return $query->published()->whereNull('deleted_at');
+    }
+
+    /**
+     * Scope a query to include posts of a specific type.
+     */
+    public function scopeOfType(Builder $query, WorklifePostType $type): Builder
+    {
+        return $query->where('post_type', $type);
+    }
+
+    /**
+     * Scope a query to include posts visible to a specific employee.
+     * This implements the audience system logic.
+     */
+    public function scopeVisibleTo(Builder $query, Employee $employee): Builder
+    {
+        return $query->where(function (Builder $q) use ($employee) {
+            // Company-wide posts
             $q->where('audience_type', AudienceType::Company)
-              ->orWhere(function ($sq) use ($employee) {
-                  $sq->where('audience_type', AudienceType::Department)
-                     ->where('audience_id', $employee->department_id);
-              })
-              ->orWhere(function ($sq) use ($employee) {
-                  $sq->where('audience_type', AudienceType::Team)
-                     ->where('audience_id', $employee->department_id);
-              })
-              ->orWhere(function ($sq) use ($employee) {
-                  $sq->where('audience_type', AudienceType::Role)
-                     ->where('audience_id', $employee->user->roles->first()?->id);
-              });
+                ->orWhere(function (Builder $q2) use ($employee) {
+                    // Department-specific posts
+                    $q2->where('audience_type', AudienceType::Department)
+                        ->where('audience_id', $employee->department_id); // Assuming employee has department_id
+                })
+                ->orWhere(function (Builder $q3) use ($employee) {
+                    // Group-specific posts (requires employee to belong to the audience_id group)
+                    $q3->where('audience_type', AudienceType::Group)
+                        ->whereIn('audience_id', function ($subQuery) use ($employee) {
+                            $subQuery->select('worklife_group_id')
+                                ->from('worklife_group_employee')
+                                ->where('employee_id', $employee->id);
+                        });
+                })
+                ->orWhere(function (Builder $q4) use ($employee) {
+                    // Direct posts (i.e., private message or direct assignment, audience_id refers to employee_id)
+                    $q4->where('audience_type', AudienceType::Direct)
+                        ->where('audience_id', $employee->id);
+                })
+                ->orWhere(function (Builder $q5) use ($employee) {
+                    // Posts authored by the employee are always visible to them, regardless of audience
+                    $q5->where('author_employee_id', $employee->id);
+                });
         });
-    }
-
-    public function scopeAnnouncements($query)
-    {
-        return $query->where('post_type', WorklifePostType::Announcement);
-    }
-
-    public function scopeAchievements($query)
-    {
-        return $query->where('post_type', WorklifePostType::Achievement);
-    }
-
-    public function scopeAutoGenerated($query)
-    {
-        return $query->where('post_type', WorklifePostType::Auto);
     }
 }

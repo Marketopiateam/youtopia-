@@ -22,6 +22,7 @@ return new class extends Migration
 
             $table->index(['scheduled_at', 'status']);
             $table->index('organizer_employee_id');
+            $table->softDeletes();
         });
     }
 

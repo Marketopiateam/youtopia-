@@ -2,89 +2,44 @@
 
 namespace App\Models;
 
-use App\Enums\ConversationType;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\ConversationType; // Assuming this enum will be created
 
 class Conversation extends Model
 {
-    protected $fillable = [
-        'type',
-        'title',
-        'last_message_at',
-    ];
+    // protected $fillable = [ // No fillable based on current minimal migration
+    //     'type', // if added
+    //     'name', // if added
+    // ];
 
     protected $casts = [
-        'type' => ConversationType::class,
-        'last_message_at' => 'datetime',
+        // 'type' => ConversationType::class, // if added
     ];
 
-    public function participants(): BelongsToMany
-    {
-        return $this->belongsToMany(Employee::class, 'conversation_participants')
-                   ->withPivot(['joined_at', 'left_at'])
-                   ->withTimestamps();
-    }
-
+    /**
+     * Get the messages for the conversation.
+     */
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class)->orderBy('created_at');
+        return $this->hasMany(Message::class);
     }
 
-    public function latestMessage(): HasOne
+    /**
+     * Get the participants of the conversation.
+     */
+    public function participants(): HasMany
     {
-        return $this->hasOne(Message::class)->latest();
+        return $this->hasMany(ConversationParticipant::class);
     }
 
-    public function unreadCountFor(Employee $employee): int
+    /**
+     * Get the employees involved in the conversation.
+     */
+    public function employees(): BelongsToMany
     {
-        $lastRead = $this->participants()
-                        ->where('employee_id', $employee->id)
-                        ->first()
-                        ?->pivot
-                        ?->last_read_at;
-
-        if (!$lastRead) {
-            return $this->messages()->count();
-        }
-
-        return $this->messages()
-                   ->where('created_at', '>', $lastRead)
-                   ->where('sender_employee_id', '!=', $employee->id)
-                   ->count();
-    }
-
-    public function markAsReadFor(Employee $employee)
-    {
-        $this->participants()
-            ->updateExistingPivot($employee->id, [
-                'last_read_at' => now(),
-            ]);
-    }
-
-    public function addParticipant(Employee $employee)
-    {
-        $this->participants()->attach($employee->id, [
-            'joined_at' => now(),
-        ]);
-    }
-
-    public function removeParticipant(Employee $employee)
-    {
-        $this->participants()->updateExistingPivot($employee->id, [
-            'left_at' => now(),
-        ]);
-    }
-
-    public function isDirectMessage(): bool
-    {
-        return $this->type === ConversationType::Direct;
-    }
-
-    public function isGroupMessage(): bool
-    {
-        return $this->type === ConversationType::Group;
+        return $this->belongsToMany(Employee::class, 'conversation_participants', 'conversation_id', 'employee_id')
+            ->withTimestamps();
     }
 }

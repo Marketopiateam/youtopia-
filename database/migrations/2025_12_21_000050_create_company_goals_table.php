@@ -20,6 +20,7 @@ return new class extends Migration
 
             $table->index(['quarter', 'year', 'status']);
             $table->index('owner_employee_id');
+            $table->softDeletes();
         });
     }
 

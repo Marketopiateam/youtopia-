@@ -24,7 +24,7 @@ class EmployeeContractSeeder extends Seeder
         foreach ($employees as $employee) {
             EmployeeContract::create([
                 'employee_id' => $employee->id,
-                'contract_type' => ContractType::FULL_TIME,
+                'contract_type' => ContractType::FullTime,
                 'start_date' => $employee->hire_date,
                 'working_hours_per_week' => 40,
                 'base_salary' => 50000,

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use App\Enums\GoalType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CompanyGoal extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'title',
         'description',
@@ -21,7 +22,6 @@ class CompanyGoal extends Model
     protected $casts = [
         'quarter' => 'integer',
         'year' => 'integer',
-        'status' => GoalType::class,
     ];
 
     public function owner(): BelongsTo

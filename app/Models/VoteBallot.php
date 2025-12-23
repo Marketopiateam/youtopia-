@@ -18,16 +18,25 @@ class VoteBallot extends Model
         'voted_at' => 'datetime',
     ];
 
+    /**
+     * Get the vote that this ballot belongs to.
+     */
     public function vote(): BelongsTo
     {
         return $this->belongsTo(Vote::class);
     }
 
+    /**
+     * Get the employee who cast this ballot.
+     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
+    /**
+     * Get the option that was voted for.
+     */
     public function option(): BelongsTo
     {
         return $this->belongsTo(VoteOption::class, 'option_id');

@@ -24,6 +24,8 @@ class WorklifePostResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationGroup = 'Social';
+
     protected static ?string $recordTitleAttribute = 'id';
 
     public static function form(Schema $schema): Schema

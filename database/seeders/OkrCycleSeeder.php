@@ -17,14 +17,14 @@ class OkrCycleSeeder extends Seeder
             'name' => 'Q1 2026',
             'start_date' => '2026-01-01',
             'end_date' => '2026-03-31',
-            'status' => OKRStatus::IN_PROGRESS,
+            'status' => OKRStatus::Active,
         ]);
 
         OkrCycle::create([
             'name' => 'Q2 2026',
             'start_date' => '2026-04-01',
             'end_date' => '2026-06-30',
-            'status' => OKRStatus::DRAFT,
+            'status' => OKRStatus::Draft,
         ]);
     }
 }

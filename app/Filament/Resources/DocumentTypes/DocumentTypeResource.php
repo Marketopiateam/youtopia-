@@ -20,6 +20,8 @@ class DocumentTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationGroup = 'Onboarding';
+
     public static function form(Schema $schema): Schema
     {
         return DocumentTypeForm::configure($schema);
