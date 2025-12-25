@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Employee extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasFactory;
 
     protected $fillable = [
         'user_id',
@@ -104,5 +106,13 @@ class Employee extends Model
     {
         return $this->belongsToMany(WorklifeGroup::class, 'worklife_group_employee', 'employee_id', 'worklife_group_id')
             ->withTimestamps();
+    }
+
+
+    protected static function generateEmployeeNumber(): string
+    {
+        $lastId = self::max('id') + 1;
+
+        return 'EMP-' . str_pad($lastId, 6, '0', STR_PAD_LEFT);
     }
 }

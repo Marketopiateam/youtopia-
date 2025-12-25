@@ -12,25 +12,30 @@ class DeductionTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        DeductionType::create([
-            'name' => 'Tax',
-            'code' => 'TAX',
-            'is_mandatory' => true,
-            'is_active' => true,
-        ]);
+        DeductionType::firstOrCreate(
+            ['name' => 'Income Tax'],
+            ['code' => 'DED-TAX', 'is_mandatory' => true, 'is_active' => true]
+        );
+        DeductionType::firstOrCreate(
+            ['name' => 'Social Security'],
+            ['code' => 'DED-SS', 'is_mandatory' => true, 'is_active' => true]
+        );
+        DeductionType::firstOrCreate(
+            ['name' => 'Health Insurance'],
+            ['code' => 'DED-HEALTH', 'is_mandatory' => false, 'is_active' => true]
+        );
+        DeductionType::firstOrCreate(
+            ['name' => 'Retirement Plan'],
+            ['code' => 'DED-RET', 'is_mandatory' => false, 'is_active' => true]
+        );
 
-        DeductionType::create([
-            'name' => 'Social Security',
-            'code' => 'SS',
-            'is_mandatory' => true,
-            'is_active' => true,
-        ]);
+        for ($i = 1; $i <= 5; $i++) {
+            DeductionType::firstOrCreate(
+                ['name' => "Custom Deduction {$i}"],
+                ['code' => "DED-CUSTOM-{$i}", 'is_mandatory' => false, 'is_active' => true]
+            );
+        }
 
-        DeductionType::create([
-            'name' => 'Loan',
-            'code' => 'LOAN',
-            'is_mandatory' => false,
-            'is_active' => true,
-        ]);
+        $this->command->info('Deduction Types seeded.');
     }
 }

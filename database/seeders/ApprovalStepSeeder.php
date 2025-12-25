@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Models\Employee;
+use App\Enums\ApprovalApproverType;
 use Illuminate\Database\Seeder;
 
 class ApprovalStepSeeder extends Seeder
@@ -14,33 +15,40 @@ class ApprovalStepSeeder extends Seeder
      */
     public function run(): void
     {
-        $leaveWorkflow = ApprovalWorkflow::where('entity_type', 'leave_request')->first();
-        $ticketWorkflow = ApprovalWorkflow::where('entity_type', 'ticket')->first();
+        if (ApprovalWorkflow::count() === 0) {
+            $this->call(ApprovalWorkflowSeeder::class);
+        }
         $employees = Employee::all();
+        $faker = \Faker\Factory::create();
+        $workflows = ApprovalWorkflow::all();
 
-        if ($leaveWorkflow && $employees->isNotEmpty()) {
-            ApprovalStep::create([
-                'workflow_id' => $leaveWorkflow->id,
-                'step_order' => 1,
-                'approver_role' => 'manager',
-                'is_required' => true,
-            ]);
+        foreach ($workflows as $workflow) {
+            for ($i = 1; $i <= rand(2, 4); $i++) {
+                $approverType = $faker->randomElement(ApprovalApproverType::cases());
+                $approverRole = null;
+                $approverEmployeeId = null;
 
-            ApprovalStep::create([
-                'workflow_id' => $leaveWorkflow->id,
-                'step_order' => 2,
-                'approver_role' => 'hr',
-                'is_required' => true,
-            ]);
+                if ($approverType === ApprovalApproverType::Role) {
+                    $approverRole = $faker->randomElement(['manager', 'hr', 'admin']);
+                } elseif ($approverType === ApprovalApproverType::Employee && $employees->isNotEmpty()) {
+                    $approverEmployeeId = $employees->random()->id;
+                }
+
+                ApprovalStep::firstOrCreate(
+                    [
+                        'workflow_id' => $workflow->id,
+                        'step_order' => $i,
+                    ],
+                    [
+                        'approver_type' => $approverType,
+                        'approver_role' => $approverRole,
+                        'approver_employee_id' => $approverEmployeeId,
+                        'is_required' => $faker->boolean(80),
+                    ]
+                );
+            }
         }
 
-        if ($ticketWorkflow && $employees->isNotEmpty()) {
-            ApprovalStep::create([
-                'workflow_id' => $ticketWorkflow->id,
-                'step_order' => 1,
-                'approver_employee_id' => $employees->random()->id,
-                'is_required' => true,
-            ]);
-        }
+        $this->command->info('Approval Steps seeded.');
     }
 }

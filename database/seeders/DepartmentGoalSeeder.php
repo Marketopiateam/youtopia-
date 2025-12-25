@@ -14,32 +14,26 @@ class DepartmentGoalSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Department::count() === 0) {
+            $this->call(DepartmentSeeder::class);
+        }
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+
         $departments = Department::all();
         $employees = Employee::all();
 
-        if ($departments->isEmpty() || $employees->isEmpty()) {
-            $this->command->info('No departments or employees found, skipping department goal seeding.');
-            return;
+        foreach ($departments as $department) {
+            for ($i = 0; $i < rand(1, 3); $i++) {
+                DepartmentGoal::factory()->make()->each(function ($departmentGoal) use ($department, $employees) {
+                    $departmentGoal->department_id = $department->id;
+                    $departmentGoal->owner_employee_id = $employees->random()->id;
+                    $departmentGoal->save();
+                });
+            }
         }
 
-        DepartmentGoal::create([
-            'department_id' => $departments->random()->id,
-            'title' => 'Launch new marketing campaign',
-            'description' => 'Focus on social media and content marketing.',
-            'quarter' => 1,
-            'year' => 2026,
-            'status' => 'in_progress',
-            'owner_employee_id' => $employees->random()->id,
-        ]);
-
-        DepartmentGoal::create([
-            'department_id' => $departments->random()->id,
-            'title' => 'Redesign the main website',
-            'description' => 'Improve user experience and mobile responsiveness.',
-            'quarter' => 1,
-            'year' => 2026,
-            'status' => 'in_progress',
-            'owner_employee_id' => $employees->random()->id,
-        ]);
+        $this->command->info('Department Goals seeded.');
     }
 }

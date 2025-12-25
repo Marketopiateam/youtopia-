@@ -8,9 +8,11 @@ use App\Enums\TicketStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Notifications\TicketSubmittedNotification;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ticket extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'ticket_type_id',

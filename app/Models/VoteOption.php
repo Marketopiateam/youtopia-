@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VoteOption extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'vote_id',
         'option_text',
@@ -31,6 +33,6 @@ class VoteOption extends Model
      */
     public function ballots(): HasMany
     {
-        return $this->hasMany(VoteBallot::class, 'vote_option_id');
+        return $this->hasMany(VoteBallot::class, 'option_id');
     }
 }

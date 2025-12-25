@@ -2,68 +2,61 @@
 
 namespace Database\Seeders;
 
-use App\Enums\EmployeeStatus;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
-        $departments = Department::all();
-
-        if ($departments->isEmpty()) {
-            $this->command->warn('No departments found, skipping EmployeeSeeder.');
-            return;
+        if (Department::count() === 0) {
+            $this->call(DepartmentSeeder::class);
         }
 
-        DB::transaction(function () use ($departments) {
-            // Get all non-admin users
-            $usersToBecomeEmployees = User::whereDoesntHave('roles', function ($query) {
-                $query->where('name', 'admin');
-            })->get();
+        $departments = Department::all();
 
-            if ($usersToBecomeEmployees->isEmpty()) {
-                $this->command->warn('No non-admin users found to create employees for.');
-                return;
+        $nextEmployeeNumber = (int) (Employee::withTrashed()->max('employee_number') ?? 1000);
+
+        $nextEmployeeAttributes = function () use (&$nextEmployeeNumber): array {
+            $nextEmployeeNumber++;
+            $employeeNumber = $nextEmployeeNumber;
+
+            return [
+                'employee_number' => $employeeNumber,
+                'employee_code' => 'EMP-' . str_pad((string) $employeeNumber, 6, '0', STR_PAD_LEFT),
+            ];
+        };
+
+        $managerUsers = User::role('manager')->get();
+        foreach ($managerUsers as $managerUser) {
+            if ($managerUser->employee) {
+                continue;
             }
 
-            $managerEmployees = Employee::whereHas('user.roles', function($query) {
-                $query->where('name', 'manager');
-            })->get();
+            Employee::factory()->create([
+                ...$nextEmployeeAttributes(),
+                'user_id' => $managerUser->id,
+                'department_id' => $departments->random()->id,
+                'manager_employee_id' => null,
+            ]);
+        }
 
-            $lastEmployeeNumber = (int) (Employee::withTrashed()->max('employee_number') ?? 0);
+        $managerEmployees = Employee::whereIn('user_id', $managerUsers->pluck('id'))->get();
 
-            foreach ($usersToBecomeEmployees as $index => $user) {
-                // Check if employee already exists for this user
-                if ($user->employee) {
-                    continue;
-                }
+        $usersWithoutEmployees = User::whereDoesntHave('employee')->get();
+        foreach ($usersWithoutEmployees as $user) {
+            Employee::factory()->create([
+                ...$nextEmployeeAttributes(),
+                'user_id' => $user->id,
+                'department_id' => $departments->random()->id,
+                'manager_employee_id' => $managerEmployees->isNotEmpty()
+                    ? $managerEmployees->random()->id
+                    : null,
+            ]);
+        }
 
-                $employeeNumber = $lastEmployeeNumber + 1 + $index;
-                $department = $departments->random();
-                $hireDate = now()->subDays(rand(30, 500))->toDateString();
-
-                $managerEmployeeId = null;
-                if ($managerEmployees->isNotEmpty()) {
-                    $managerEmployeeId = $managerEmployees->random()->id;
-                }
-
-                Employee::create([
-                    'user_id' => $user->id,
-                    'employee_number' => $employeeNumber,
-                    'employee_code'   => 'EMP-' . str_pad((string) $employeeNumber, 6, '0', STR_PAD_LEFT),
-                    'status' => EmployeeStatus::Active->value,
-                    'hire_date' => $hireDate,
-                    'department_id' => $department->id,
-                    'manager_employee_id' => $managerEmployeeId,
-                ]);
-            }
-
-            $this->command->info('Created employee records for non-admin users successfully.');
-        });
+        $this->command->info('Employees seeded.');
     }
 }

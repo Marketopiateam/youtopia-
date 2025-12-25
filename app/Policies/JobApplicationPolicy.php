@@ -1,34 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\JobApplication;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class JobApplicationPolicy
 {
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+        return $authUser->can('ViewAny:JobApplication');
     }
 
-    public function view(User $user, JobApplication $application): bool
+    public function view(AuthUser $authUser, JobApplication $jobApplication): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+        return $authUser->can('View:JobApplication');
     }
 
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return true;
+        return $authUser->can('Create:JobApplication');
     }
 
-    public function update(User $user, JobApplication $application): bool
+    public function update(AuthUser $authUser, JobApplication $jobApplication): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr']);
+        return $authUser->can('Update:JobApplication');
     }
 
-    public function delete(User $user, JobApplication $application): bool
+    public function delete(AuthUser $authUser, JobApplication $jobApplication): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin']);
+        return $authUser->can('Delete:JobApplication');
     }
+
+    public function restore(AuthUser $authUser, JobApplication $jobApplication): bool
+    {
+        return $authUser->can('Restore:JobApplication');
+    }
+
+    public function forceDelete(AuthUser $authUser, JobApplication $jobApplication): bool
+    {
+        return $authUser->can('ForceDelete:JobApplication');
+    }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:JobApplication');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:JobApplication');
+    }
+
+    public function replicate(AuthUser $authUser, JobApplication $jobApplication): bool
+    {
+        return $authUser->can('Replicate:JobApplication');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:JobApplication');
+    }
+
 }

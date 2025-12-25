@@ -15,19 +15,31 @@ class ApprovalActionSeeder extends Seeder
      */
     public function run(): void
     {
-        $approvalRequest = ApprovalRequest::first();
-        $approvalStep = ApprovalStep::first();
-        $employee = Employee::first();
-
-        if ($approvalRequest && $approvalStep && $employee) {
-            ApprovalAction::create([
-                'approval_request_id' => $approvalRequest->id,
-                'step_id' => $approvalStep->id,
-                'approver_employee_id' => $employee->id,
-                'action' => 'approved',
-                'notes' => 'This is an automatic approval from the seeder.',
-                'acted_at' => now(),
-            ]);
+        if (ApprovalRequest::count() === 0) {
+            $this->call(ApprovalRequestSeeder::class);
         }
+        if (ApprovalStep::count() === 0) {
+            $this->call(ApprovalStepSeeder::class);
+        }
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+
+        $approvalRequests = ApprovalRequest::all();
+        $employees = Employee::all();
+        $steps = ApprovalStep::all();
+
+        foreach ($approvalRequests as $request) {
+            for ($i = 0; $i < rand(1, 3); $i++) {
+                ApprovalAction::factory()->make()->each(function ($action) use ($request, $employees, $steps) {
+                    $action->approval_request_id = $request->id;
+                    $action->approver_employee_id = $employees->random()->id;
+                    $action->step_id = $steps->random()->id;
+                    $action->save();
+                });
+            }
+        }
+
+        $this->command->info('Approval Actions seeded.');
     }
 }

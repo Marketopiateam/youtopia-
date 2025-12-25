@@ -17,6 +17,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
+
 
 class SurveyResource extends Resource
 {
@@ -24,7 +26,8 @@ class SurveyResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationGroup = 'Communication';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Communication';
 
     protected static ?string $recordTitleAttribute = 'id';
 

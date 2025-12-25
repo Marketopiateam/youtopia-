@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OkrCheckin extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'key_result_id',
         'employee_id',

@@ -5,15 +5,18 @@ namespace App\Models;
 use App\Enums\AudienceType;
 use App\Enums\WorklifePostType;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorklifePost extends Model
 {
     use SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'author_employee_id',

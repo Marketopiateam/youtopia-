@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\ApprovalWorkflow;
-use App\Models\Department;
 use Illuminate\Database\Seeder;
 
 class ApprovalWorkflowSeeder extends Seeder
@@ -13,22 +12,21 @@ class ApprovalWorkflowSeeder extends Seeder
      */
     public function run(): void
     {
-        $department = Department::first();
+        ApprovalWorkflow::firstOrCreate(
+            ['name' => 'Leave Request Approval'],
+            ['entity_type' => 'leave_request', 'description' => 'Workflow for approving employee leave requests.', 'is_active' => true]
+        );
+        ApprovalWorkflow::firstOrCreate(
+            ['name' => 'Expense Report Approval'],
+            ['entity_type' => 'expense_report', 'description' => 'Workflow for approving employee expense reports.', 'is_active' => true]
+        );
+        ApprovalWorkflow::firstOrCreate(
+            ['name' => 'Purchase Order Approval'],
+            ['entity_type' => 'purchase_order', 'description' => 'Workflow for approving purchase orders.', 'is_active' => true]
+        );
 
-        ApprovalWorkflow::create([
-            'name' => 'Leave Request Approval',
-            'entity_type' => 'leave_request',
-            'department_id' => $department?->id,
-            'description' => 'Default workflow for leave requests.',
-            'is_active' => true,
-        ]);
+        ApprovalWorkflow::factory()->count(5)->create();
 
-        ApprovalWorkflow::create([
-            'name' => 'Ticket Escalation Workflow',
-            'entity_type' => 'ticket',
-            'department_id' => $department?->id,
-            'description' => 'Default workflow for escalating tickets.',
-            'is_active' => true,
-        ]);
+        $this->command->info('Approval Workflows seeded.');
     }
 }

@@ -13,21 +13,17 @@ class InterviewSeeder extends Seeder
      */
     public function run(): void
     {
+        if (JobApplication::count() === 0) {
+            $this->call(JobApplicationSeeder::class);
+        }
+
         $jobApplications = JobApplication::all();
 
-        if ($jobApplications->isEmpty()) {
-            $this->command->info('No job applications found, skipping interview seeding.');
-            return;
-        }
+        Interview::factory()->count(40)->make()->each(function ($interview) use ($jobApplications) {
+            $interview->application_id = $jobApplications->random()->id;
+            $interview->save();
+        });
 
-        foreach ($jobApplications as $application) {
-            Interview::create([
-                'application_id' => $application->id,
-                'scheduled_at' => now()->addDays(rand(1, 10)),
-                'location' => 'Online (Google Meet)',
-                'interview_type' => 'video',
-                'status' => 'scheduled',
-            ]);
-        }
+        $this->command->info('Interviews seeded.');
     }
 }

@@ -7,20 +7,25 @@ use Illuminate\Database\Seeder;
 
 class DocumentTypeSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $types = [
-            ['name' => 'CV', 'is_active' => true],
-            ['name' => 'National ID', 'is_active' => true],
-            ['name' => 'Contract', 'is_active' => true],
-            ['name' => 'Certificate', 'is_active' => true],
-        ];
+        DocumentType::firstOrCreate(['name' => 'National ID Card'], ['is_active' => true]);
+        DocumentType::firstOrCreate(['name' => 'Passport'], ['is_active' => true]);
+        DocumentType::firstOrCreate(['name' => 'Employment Contract'], ['is_active' => true]);
+        DocumentType::firstOrCreate(['name' => 'Resume'], ['is_active' => true]);
+        DocumentType::firstOrCreate(['name' => 'Offer Letter'], ['is_active' => true]);
+        DocumentType::firstOrCreate(['name' => 'Bank Account Details'], ['is_active' => true]);
 
-        foreach ($types as $type) {
-            DocumentType::updateOrCreate(
-                ['name' => $type['name']],
-                ['is_active' => $type['is_active']]
+        for ($i = 1; $i <= 5; $i++) {
+            DocumentType::firstOrCreate(
+                ['name' => "Custom Document {$i}"],
+                ['is_active' => true]
             );
         }
+
+        $this->command->info('Document Types seeded.');
     }
 }

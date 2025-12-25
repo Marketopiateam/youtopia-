@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\ConversationParticipant;
 use App\Models\Conversation;
 use App\Models\User;
-
+use Illuminate\Database\Seeder;
 
 class ConversationParticipantSeeder extends Seeder
 {
@@ -15,20 +14,34 @@ class ConversationParticipantSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure conversations and users exist
+        if (Conversation::count() === 0) {
+            $this->call(ConversationSeeder::class);
+        }
+        if (User::count() === 0) {
+            $this->call(UserSeeder::class);
+        }
+
         $conversations = Conversation::all();
         $users = User::all();
 
-        if ($conversations->isNotEmpty() && $users->count() >= 2) {
-            foreach ($conversations as $conversation) {
-                DB::table('conversation_participants')->insert([
-                    'conversation_id' => $conversation->id,
-                    'user_id' => $users->random()->id,
-                ]);
-                DB::table('conversation_participants')->insert([
-                    'conversation_id' => $conversation->id,
-                    'user_id' => $users->random()->id,
-                ]);
+        foreach ($conversations as $conversation) {
+            // Add a random number of participants to each conversation
+            $participantsCount = rand(2, min(5, $users->count())); // At least 2 participants, max 5 or total users
+
+            // Ensure unique users per conversation
+            $selectedUsers = $users->shuffle()->take($participantsCount);
+
+            foreach ($selectedUsers as $user) {
+                ConversationParticipant::firstOrCreate(
+                    [
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $user->id,
+                    ]
+                );
             }
         }
+
+        $this->command->info('Conversation Participants seeded.');
     }
 }

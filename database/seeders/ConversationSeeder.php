@@ -12,8 +12,9 @@ class ConversationSeeder extends Seeder
      */
     public function run(): void
     {
-        Conversation::create();
-        Conversation::create();
-        Conversation::create();
+        // Create 20 conversations
+        Conversation::factory()->count(20)->create();
+
+        $this->command->info('Conversations seeded.');
     }
 }

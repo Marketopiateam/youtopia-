@@ -2,9 +2,16 @@
 
 namespace App\Services;
 
+use App\Enums\ReactionType;
+use App\Events\PostPublished;
 use App\Models\Employee;
+use App\Models\WorklifeAttachment;
+use App\Models\WorklifeComment;
 use App\Models\WorklifePost;
+use App\Models\WorklifeReaction;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
+use InvalidArgumentException;
 
 class WorklifeFeedService
 {
@@ -20,16 +27,20 @@ class WorklifeFeedService
     {
         return WorklifePost::query()
             ->with([
-                'author.user', // Assuming employee has a user relation for basic info
-                'source', // Load polymorphic source (Announcement, Survey, Vote)
-                'comments.author.user', // Load comments and their authors
-                'likes.user', // Load likes and the users who liked them
-                'audienceGroup', // If audience is a group
+                'author.user',
+                'source',
+                'comments.author',
+                'comments.replies.author',
+                'reactions.employee.user',
+                'comments.reactions.employee.user',
+                'attachments',
+                'comments.attachments',
+                'audienceGroup',
             ])
-            ->visibleTo($employee) // Apply audience visibility logic
-            ->published() // Only show published posts
-            ->orderBy('is_pinned', 'desc') // Pinned posts first
-            ->latest('published_at') // Latest published posts first
+            ->visibleTo($employee)
+            ->published()
+            ->orderBy('is_pinned', 'desc')
+            ->latest('published_at')
             ->paginate($perPage, ['*'], 'page', $page);
     }
 
@@ -51,18 +62,129 @@ class WorklifeFeedService
             $post->source()->associate($source);
         }
 
-        // Ensure published_at is set if not provided and status allows
-        if (!isset($data['published_at'])) {
+        if (! isset($data['published_at'])) {
             $post->published_at = now();
         }
 
         $post->save();
 
-        // TODO: Dispatch PostPublished event
-        // event(new PostPublished($post));
+        event(new PostPublished($post));
 
         return $post;
     }
 
-    // TODO: Add methods for liking/unliking posts/comments, commenting, etc.
+    /**
+     * Add a reaction to a reactable model (WorklifePost or WorklifeComment).
+     *
+     * @param Employee $employee The employee adding the reaction.
+     * @param Model $reactable The model to react to (WorklifePost or WorklifeComment).
+     * @param ReactionType $reactionType The type of reaction.
+     * @return WorklifeReaction
+     */
+    public function addReaction(Employee $employee, Model $reactable, ReactionType $reactionType): WorklifeReaction
+    {
+        $reaction = WorklifeReaction::firstOrCreate([
+            'reactable_type' => $reactable->getMorphClass(),
+            'reactable_id' => $reactable->id,
+            'employee_id' => $employee->id,
+            'reaction_type' => $reactionType->value,
+        ]);
+
+        // TODO: Dispatch ReactionAdded event
+        return $reaction;
+    }
+
+    /**
+     * Remove a reaction from a reactable model.
+     *
+     * @param Employee $employee The employee removing the reaction.
+     * @param Model $reactable The model to remove the reaction from.
+     * @param ReactionType $reactionType The type of reaction to remove.
+     * @return void
+     */
+    public function removeReaction(Employee $employee, Model $reactable, ReactionType $reactionType): void
+    {
+        WorklifeReaction::where([
+            'reactable_type' => $reactable->getMorphClass(),
+            'reactable_id' => $reactable->id,
+            'employee_id' => $employee->id,
+            'reaction_type' => $reactionType->value,
+        ])->delete();
+
+        // TODO: Dispatch ReactionRemoved event
+    }
+
+    /**
+     * Add a comment to a worklife post.
+     *
+     * @param Employee $author The employee authoring the comment.
+     * @param WorklifePost $post The post to comment on.
+     * @param string $content The content of the comment.
+     * @param WorklifeComment|null $parentComment The parent comment if this is a reply.
+     * @return WorklifeComment
+     */
+    public function addComment(Employee $author, WorklifePost $post, string $content, ?WorklifeComment $parentComment = null): WorklifeComment
+    {
+        if (! $author->user_id) {
+            throw new InvalidArgumentException('Employee must have a user to author comments.');
+        }
+
+        $comment = $post->comments()->create([
+            'author_user_id' => $author->user_id,
+            'content' => $content,
+            'parent_comment_id' => $parentComment?->id,
+        ]);
+
+        // TODO: Dispatch CommentAdded event
+        return $comment;
+    }
+
+    /**
+     * Delete a worklife comment.
+     *
+     * @param WorklifeComment $comment The comment to delete.
+     * @return void
+     */
+    public function deleteComment(WorklifeComment $comment): void
+    {
+        $comment->delete();
+
+        // TODO: Dispatch CommentDeleted event
+    }
+
+    /**
+     * Attach a file to an attachable model (WorklifePost or WorklifeComment).
+     * This is a simplified placeholder; real implementation would involve file storage.
+     *
+     * @param Employee $uploader The employee uploading the file.
+     * @param Model $attachable The model to attach the file to.
+     * @param array $fileData Array containing file information (e.g., 'path', 'name', 'mime', 'size').
+     * @return WorklifeAttachment
+     */
+    public function attachFile(Employee $uploader, Model $attachable, array $fileData): WorklifeAttachment
+    {
+        $attachment = $attachable->attachments()->create([
+            'uploaded_by_employee_id' => $uploader->id,
+            'file_path' => $fileData['file_path'],
+            'file_name' => $fileData['file_name'],
+            'mime_type' => $fileData['mime_type'] ?? null,
+            'file_size' => $fileData['file_size'],
+        ]);
+
+        // TODO: Dispatch AttachmentAdded event
+        return $attachment;
+    }
+
+    /**
+     * Detach (soft delete) a worklife attachment.
+     *
+     * @param WorklifeAttachment $attachment The attachment to detach.
+     * @return void
+     */
+    public function detachFile(WorklifeAttachment $attachment): void
+    {
+        $attachment->delete();
+
+        // TODO: Dispatch AttachmentRemoved event
+    }
 }

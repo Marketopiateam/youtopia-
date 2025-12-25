@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\DocumentType;
-use App\Models\Employee;
 use App\Models\EmployeeDocument;
-use App\Models\User;
+use App\Models\Employee;
+use App\Models\DocumentType;
 use Illuminate\Database\Seeder;
 
 class EmployeeDocumentSeeder extends Seeder
@@ -15,22 +14,28 @@ class EmployeeDocumentSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure employees and document types exist
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+        if (DocumentType::count() === 0) {
+            $this->call(DocumentTypeSeeder::class);
+        }
+
         $employees = Employee::all();
         $documentTypes = DocumentType::all();
-        $users = User::all();
-
-        if ($employees->isEmpty() || $documentTypes->isEmpty() || $users->isEmpty()) {
-            $this->command->info('No employees, document types or users found, skipping employee document seeding.');
-            return;
-        }
 
         foreach ($employees as $employee) {
-            EmployeeDocument::create([
-                'employee_id' => $employee->id,
-                'document_type_id' => $documentTypes->random()->id,
-                'file_path' => 'documents/dummy.pdf',
-                'uploaded_by_user_id' => $users->random()->id,
-            ]);
+            // Give each employee 2-5 documents
+            for ($i = 0; $i < rand(2, 5); $i++) {
+                EmployeeDocument::factory()->make()->each(function ($doc) use ($employee, $documentTypes) {
+                    $doc->employee_id = $employee->id;
+                    $doc->document_type_id = $documentTypes->random()->id;
+                    $doc->save();
+                });
+            }
         }
+
+        $this->command->info('Employee Documents seeded.');
     }
 }

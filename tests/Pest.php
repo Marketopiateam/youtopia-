@@ -12,7 +12,6 @@
 */
 
 pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -41,7 +40,27 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+use App\Models\User;
+use Database\Seeders\RolesSeeder;
+use Laravel\Sanctum\Sanctum;
+
+function actingAsRole(string $role): User
 {
-    // ..
+    seed(RolesSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    Sanctum::actingAs($user);
+
+    return $user;
+}
+
+function actingAsUser(): User
+{
+    $user = User::factory()->create();
+
+    Sanctum::actingAs($user);
+
+    return $user;
 }

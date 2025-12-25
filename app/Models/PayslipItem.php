@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\PayslipItemType;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PayslipItem extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'payslip_id',
         'item_type',

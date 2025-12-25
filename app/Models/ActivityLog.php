@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Auth;
 
 class ActivityLog extends Model
 {
+    use HasFactory;
     const UPDATED_AT = null; // Only created_at
 
     protected $fillable = [
@@ -41,7 +44,7 @@ class ActivityLog extends Model
     public static function log(string $action, Model $subject, ?array $properties = null): self
     {
         return self::create([
-            'actor_user_id' => auth()->id(),
+            'actor_user_id' => Auth::id(),
             'action' => $action,
             'subject_type' => get_class($subject),
             'subject_id' => $subject->id,

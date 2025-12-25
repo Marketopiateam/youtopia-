@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\ConversationType; // Assuming this enum will be created
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Conversation extends Model
 {
+    use HasFactory;
     // protected $fillable = [ // No fillable based on current minimal migration
     //     'type', // if added
     //     'name', // if added

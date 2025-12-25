@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ContractType;
-use App\Models\Employee;
 use App\Models\EmployeeContract;
+use App\Models\Employee;
 use Illuminate\Database\Seeder;
 
 class EmployeeContractSeeder extends Seeder
@@ -14,21 +13,23 @@ class EmployeeContractSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure employees exist
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+
         $employees = Employee::all();
 
-        if ($employees->isEmpty()) {
-            $this->command->info('No employees found, skipping employee contract seeding.');
-            return;
+        foreach ($employees as $employee) {
+            // Create 1-2 contracts per employee
+            for ($i = 0; $i < rand(1, 2); $i++) {
+                EmployeeContract::factory()->make()->each(function ($contract) use ($employee) {
+                    $contract->employee_id = $employee->id;
+                    $contract->save();
+                });
+            }
         }
 
-        foreach ($employees as $employee) {
-            EmployeeContract::create([
-                'employee_id' => $employee->id,
-                'contract_type' => ContractType::FullTime,
-                'start_date' => $employee->hire_date,
-                'working_hours_per_week' => 40,
-                'base_salary' => 50000,
-            ]);
-        }
+        $this->command->info('Employee Contracts seeded.');
     }
 }

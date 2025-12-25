@@ -20,6 +20,10 @@ class WorklifeReaction extends Model
         'reaction_type',
     ];
 
+    protected $casts = [
+        'reaction_type' => \App\Enums\ReactionType::class,
+    ];
+
     /**
      * Get the parent reactable model.
      */

@@ -7,26 +7,20 @@ use Illuminate\Database\Seeder;
 
 class DepartmentSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        $sales = Department::updateOrCreate(
-            ['name' => 'Sales'],
-            ['parent_id' => null, 'is_active' => true]
-        );
+        Department::firstOrCreate(['name' => 'Human Resources'], ['code' => 'HR-001', 'is_active' => true]);
+        Department::firstOrCreate(['name' => 'Finance'], ['code' => 'FIN-001', 'is_active' => true]);
+        Department::firstOrCreate(['name' => 'Engineering'], ['code' => 'ENG-001', 'is_active' => true]);
+        Department::firstOrCreate(['name' => 'Marketing'], ['code' => 'MKT-001', 'is_active' => true]);
+        Department::firstOrCreate(['name' => 'Sales'], ['code' => 'SAL-001', 'is_active' => true]);
+        Department::firstOrCreate(['name' => 'Customer Support'], ['code' => 'CS-001', 'is_active' => true]);
 
-        $ops = Department::updateOrCreate(
-            ['name' => 'Operations'],
-            ['parent_id' => null, 'is_active' => true]
-        );
+        Department::factory()->count(5)->create();
 
-        Department::updateOrCreate(
-            ['name' => 'Inside Sales'],
-            ['parent_id' => $sales->id, 'is_active' => true]
-        );
-
-        Department::updateOrCreate(
-            ['name' => 'Support'],
-            ['parent_id' => $ops->id, 'is_active' => true]
-        );
+        $this->command->info('Departments seeded.');
     }
 }

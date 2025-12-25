@@ -13,29 +13,19 @@ class JobApplicationSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure job posts exist
+        if (JobPost::count() === 0) {
+            $this->call(JobPostSeeder::class);
+        }
+
         $jobPosts = JobPost::all();
 
-        if ($jobPosts->isEmpty()) {
-            $this->command->info('No job posts found, skipping job application seeding.');
-            return;
-        }
+        // Create 50 job applications
+        JobApplication::factory()->count(50)->make()->each(function ($application) use ($jobPosts) {
+            $application->job_post_id = $jobPosts->random()->id;
+            $application->save();
+        });
 
-        foreach ($jobPosts as $jobPost) {
-            JobApplication::create([
-                'job_post_id' => $jobPost->id,
-                'applicant_name' => 'John Doe',
-                'email' => 'john.doe@example.com',
-                'phone' => '0123456789',
-                'status' => 'applied',
-            ]);
-
-            JobApplication::create([
-                'job_post_id' => $jobPost->id,
-                'applicant_name' => 'Jane Smith',
-                'email' => 'jane.smith@example.com',
-                'phone' => '0987654321',
-                'status' => 'screening',
-            ]);
-        }
+        $this->command->info('Job Applications seeded.');
     }
 }

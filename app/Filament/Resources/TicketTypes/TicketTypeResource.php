@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
+
 
 class TicketTypeResource extends Resource
 {
@@ -22,7 +24,8 @@ class TicketTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationGroup = 'Workflows';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Workflows';
 
     protected static ?string $recordTitleAttribute = 'name';
 

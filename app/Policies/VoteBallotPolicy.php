@@ -1,54 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
-use App\Models\User;
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\VoteBallot;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class VoteBallotPolicy
 {
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr', 'manager', 'employee']);
+        return $authUser->can('ViewAny:VoteBallot');
     }
 
-    public function view(User $user, VoteBallot $ballot): bool
+    public function view(AuthUser $authUser, VoteBallot $voteBallot): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin', 'hr'])) {
-            return true;
-        }
-
-        if ($user->hasRole('manager')) {
-            return $ballot->employee?->manager_employee_id === $user->employee?->id;
-        }
-
-        if ($user->hasRole('employee')) {
-            return $ballot->employee_id === $user->employee?->id;
-        }
-
-        return false;
+        return $authUser->can('View:VoteBallot');
     }
 
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr', 'manager', 'employee']);
+        return $authUser->can('Create:VoteBallot');
     }
 
-    public function update(User $user, VoteBallot $ballot): bool
+    public function update(AuthUser $authUser, VoteBallot $voteBallot): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin', 'hr'])) {
-            return true;
-        }
-
-        if ($user->hasRole('manager')) {
-            return $ballot->employee?->manager_employee_id === $user->employee?->id;
-        }
-
-        return $ballot->employee_id === $user->employee?->id;
+        return $authUser->can('Update:VoteBallot');
     }
 
-    public function delete(User $user, VoteBallot $ballot): bool
+    public function delete(AuthUser $authUser, VoteBallot $voteBallot): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin']);
+        return $authUser->can('Delete:VoteBallot');
     }
+
+    public function restore(AuthUser $authUser, VoteBallot $voteBallot): bool
+    {
+        return $authUser->can('Restore:VoteBallot');
+    }
+
+    public function forceDelete(AuthUser $authUser, VoteBallot $voteBallot): bool
+    {
+        return $authUser->can('ForceDelete:VoteBallot');
+    }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:VoteBallot');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:VoteBallot');
+    }
+
+    public function replicate(AuthUser $authUser, VoteBallot $voteBallot): bool
+    {
+        return $authUser->can('Replicate:VoteBallot');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:VoteBallot');
+    }
+
 }

@@ -13,29 +13,22 @@ class MeetingAgendaItemSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Meeting::count() === 0) {
+            $this->call(MeetingSeeder::class);
+        }
+
         $meetings = Meeting::all();
 
-        if ($meetings->isEmpty()) {
-            $this->command->info('No meetings found, skipping meeting agenda item seeding.');
-            return;
-        }
-
         foreach ($meetings as $meeting) {
-            MeetingAgendaItem::create([
-                'meeting_id' => $meeting->id,
-                'title' => 'Review Q4 Performance',
-                'description' => 'Discussion on key metrics and achievements.',
-                'order' => 1,
-                'duration_minutes' => 30,
-            ]);
-
-            MeetingAgendaItem::create([
-                'meeting_id' => $meeting->id,
-                'title' => 'Planning for Q1 Initiatives',
-                'description' => 'Outline new projects and resource allocation.',
-                'order' => 2,
-                'duration_minutes' => 45,
-            ]);
+            for ($i = 0; $i < rand(3, 7); $i++) {
+                MeetingAgendaItem::factory()->make()->each(function ($item) use ($meeting, $i) {
+                    $item->meeting_id = $meeting->id;
+                    $item->order = $i + 1;
+                    $item->save();
+                });
+            }
         }
+
+        $this->command->info('Meeting Agenda Items seeded.');
     }
 }

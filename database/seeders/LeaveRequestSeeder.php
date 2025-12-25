@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Models\Employee;
 use App\Models\LeaveType;
 use Illuminate\Database\Seeder;
 
@@ -14,24 +14,33 @@ class LeaveRequestSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ensure necessary data exists
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+        if (LeaveType::count() === 0) {
+            $this->call(LeaveTypeSeeder::class);
+        }
         $employees = Employee::all();
         $leaveTypes = LeaveType::all();
+        $approverEmployees = Employee::whereHas('user.roles', function ($query) {
+            $query->whereIn('name', ['admin', 'hr', 'manager']);
+        })->get();
 
-        if ($employees->isEmpty() || $leaveTypes->isEmpty()) {
-            $this->command->info('No employees or leave types found, skipping leave request seeding.');
-            return;
+        if ($approverEmployees->isEmpty()) {
+            $approverEmployees = $employees;
         }
 
-        foreach ($employees as $employee) {
-            LeaveRequest::create([
-                'employee_id' => $employee->id,
-                'leave_type_id' => $leaveTypes->random()->id,
-                'start_date' => now()->addDays(5),
-                'end_date' => now()->addDays(7),
-                'reason' => 'Annual vacation.',
-                'status' => 'pending',
-                'approver_employee_id' => $employee->manager_employee_id ?? $employees->random()->id,
-            ]);
-        }
+        // Create 50 leave requests
+        LeaveRequest::factory()->count(50)->make()->each(function ($request) use ($employees, $leaveTypes, $approverEmployees) {
+            $request->employee_id = $employees->random()->id;
+            $request->leave_type_id = $leaveTypes->random()->id;
+            if ($approverEmployees->isNotEmpty() && ($request->status == \App\Enums\LeaveStatus::Approved || $request->status == \App\Enums\LeaveStatus::Rejected)) {
+                $request->approver_employee_id = $approverEmployees->random()->id;
+            }
+            $request->save();
+        });
+
+        $this->command->info('Leave Requests seeded.');
     }
 }

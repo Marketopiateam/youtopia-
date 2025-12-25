@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Announcement;
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -13,29 +14,23 @@ class AnnouncementSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::all();
-
-        if ($users->isEmpty()) {
-            $this->command->info('No users found, skipping announcement seeding.');
-            return;
+        if (User::count() === 0) {
+            $this->call(UserSeeder::class);
+        }
+        if (Department::count() === 0) {
+            $this->call(DepartmentSeeder::class);
         }
 
-        Announcement::create([
-            'title' => 'Welcome to Youtopia!',
-            'body' => 'We are excited to have you on board. This is a company-wide announcement.',
-            'created_by_user_id' => $users->random()->id,
-            'target_scope' => 'company',
-            'publish_at' => now(),
-            'is_active' => true,
-        ]);
+        Announcement::factory()->count(20)->make()->each(function (Announcement $announcement) {
+            $announcement->created_by_user_id = User::inRandomOrder()->value('id');
 
-        Announcement::create([
-            'title' => 'New Feature: Ticket Management',
-            'body' => 'You can now submit and track tickets for various issues.',
-            'created_by_user_id' => $users->random()->id,
-            'target_scope' => 'company',
-            'publish_at' => now(),
-            'is_active' => true,
-        ]);
+            if ($announcement->target_scope?->value === 'department') {
+                $announcement->target_scope_id = Department::inRandomOrder()->value('id');
+            }
+
+            $announcement->save();
+        });
+
+        $this->command->info('Announcements seeded.');
     }
 }

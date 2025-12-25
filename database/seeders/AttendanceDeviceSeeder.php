@@ -12,18 +12,17 @@ class AttendanceDeviceSeeder extends Seeder
      */
     public function run(): void
     {
-        AttendanceDevice::create([
-            'name' => 'Main Entrance Device',
-            'location' => 'Building A, 1st Floor',
-            'device_id' => 'ZKT-001',
-            'is_active' => true,
-        ]);
+        AttendanceDevice::firstOrCreate(
+            ['name' => 'Main Office Entrance'],
+            ['device_id' => 'DEV-00001', 'location' => 'Main Office - Ground Floor', 'is_active' => true]
+        );
+        AttendanceDevice::firstOrCreate(
+            ['name' => 'HR Department Door'],
+            ['device_id' => 'DEV-00002', 'location' => 'Main Office - 1st Floor HR', 'is_active' => true]
+        );
 
-        AttendanceDevice::create([
-            'name' => 'Lab Attendance Device',
-            'location' => 'Building B, 3rd Floor',
-            'device_id' => 'ZKT-002',
-            'is_active' => true,
-        ]);
+        AttendanceDevice::factory()->count(5)->create();
+
+        $this->command->info('Attendance Devices seeded.');
     }
 }

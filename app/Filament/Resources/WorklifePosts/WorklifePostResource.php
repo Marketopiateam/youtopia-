@@ -17,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class WorklifePostResource extends Resource
 {
@@ -24,7 +25,8 @@ class WorklifePostResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationGroup = 'Social';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Social';
 
     protected static ?string $recordTitleAttribute = 'id';
 

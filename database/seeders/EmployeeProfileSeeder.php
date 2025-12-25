@@ -2,32 +2,29 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employee;
 use App\Models\EmployeeProfile;
+use App\Models\Employee;
 use Illuminate\Database\Seeder;
 
 class EmployeeProfileSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+
         $employees = Employee::all();
 
-        if ($employees->isEmpty()) {
-            $this->command->info('No employees found, skipping employee profile seeding.');
-            return;
+        foreach ($employees as $employee) {
+            EmployeeProfile::firstOrCreate(
+                ['employee_id' => $employee->id],
+                EmployeeProfile::factory()
+                    ->make(['employee_id' => $employee->id])
+                    ->toArray()
+            );
         }
 
-        foreach ($employees as $employee) {
-            EmployeeProfile::create([
-                'employee_id' => $employee->id,
-                'first_name' => $employee->user->name,
-                'last_name' => 'Faker',
-                'phone' => '123456789',
-                'email' => $employee->user->email,
-            ]);
-        }
+        $this->command->info('Employee Profiles seeded.');
     }
 }

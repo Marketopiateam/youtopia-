@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Enums\MeetingStatus;
-use App\Models\Employee;
 use App\Models\Meeting;
+use App\Models\Employee;
 use Illuminate\Database\Seeder;
 
 class MeetingSeeder extends Seeder
@@ -14,32 +13,18 @@ class MeetingSeeder extends Seeder
      */
     public function run(): void
     {
-        $employees = Employee::all();
-
-        if ($employees->isEmpty()) {
-            $this->command->info('No employees found, skipping meeting seeding.');
-            return;
+        // Ensure employees exist
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
         }
 
-        Meeting::create([
-            'title' => 'Weekly Team Sync',
-            'description' => 'Discuss weekly progress and upcoming tasks.',
-            'scheduled_at' => now()->addDays(2)->setHour(10)->setMinute(0),
-            'duration_minutes' => 60,
-            'location' => 'Conference Room A',
-            'organizer_employee_id' => $employees->random()->id,
-            'status' => MeetingStatus::SCHEDULED,
-        ]);
+        // Create 20 meetings
+        $employees = Employee::all();
+        Meeting::factory()->count(20)->make()->each(function ($meeting) use ($employees) {
+            $meeting->organizer_employee_id = $employees->random()->id;
+            $meeting->save();
+        });
 
-        Meeting::create([
-            'title' => 'Project Alpha Kick-off',
-            'description' => 'Initiate Project Alpha with all stakeholders.',
-            'scheduled_at' => now()->addDays(5)->setHour(14)->setMinute(30),
-            'duration_minutes' => 90,
-            'location' => 'Online (Zoom)',
-            'meeting_link' => 'https://zoom.us/j/1234567890',
-            'organizer_employee_id' => $employees->random()->id,
-            'status' => MeetingStatus::SCHEDULED,
-        ]);
+        $this->command->info('Meetings seeded.');
     }
 }

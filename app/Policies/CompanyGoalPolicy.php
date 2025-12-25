@@ -1,54 +1,70 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\CompanyGoal;
-use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CompanyGoalPolicy
 {
-    public function viewAny(User $user): bool
+    use HandlesAuthorization;
+    
+    public function viewAny(AuthUser $authUser): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr', 'manager', 'employee']);
+        return $authUser->can('ViewAny:CompanyGoal');
     }
 
-    public function view(User $user, CompanyGoal $goal): bool
+    public function view(AuthUser $authUser, CompanyGoal $companyGoal): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin', 'hr'])) {
-            return true;
-        }
-
-        if ($user->hasRole('manager')) {
-            return $goal->owner?->manager_employee_id === $user->employee?->id;
-        }
-
-        if ($user->hasRole('employee')) {
-            return $goal->owner_employee_id === $user->employee?->id;
-        }
-
-        return false;
+        return $authUser->can('View:CompanyGoal');
     }
 
-    public function create(User $user): bool
+    public function create(AuthUser $authUser): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin', 'hr', 'manager', 'employee']);
+        return $authUser->can('Create:CompanyGoal');
     }
 
-    public function update(User $user, CompanyGoal $goal): bool
+    public function update(AuthUser $authUser, CompanyGoal $companyGoal): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'admin', 'hr'])) {
-            return true;
-        }
-
-        if ($user->hasRole('manager')) {
-            return $goal->owner?->manager_employee_id === $user->employee?->id;
-        }
-
-        return $goal->owner_employee_id === $user->employee?->id;
+        return $authUser->can('Update:CompanyGoal');
     }
 
-    public function delete(User $user, CompanyGoal $goal): bool
+    public function delete(AuthUser $authUser, CompanyGoal $companyGoal): bool
     {
-        return $user->hasAnyRole(['super_admin', 'admin']);
+        return $authUser->can('Delete:CompanyGoal');
     }
+
+    public function restore(AuthUser $authUser, CompanyGoal $companyGoal): bool
+    {
+        return $authUser->can('Restore:CompanyGoal');
+    }
+
+    public function forceDelete(AuthUser $authUser, CompanyGoal $companyGoal): bool
+    {
+        return $authUser->can('ForceDelete:CompanyGoal');
+    }
+
+    public function forceDeleteAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('ForceDeleteAny:CompanyGoal');
+    }
+
+    public function restoreAny(AuthUser $authUser): bool
+    {
+        return $authUser->can('RestoreAny:CompanyGoal');
+    }
+
+    public function replicate(AuthUser $authUser, CompanyGoal $companyGoal): bool
+    {
+        return $authUser->can('Replicate:CompanyGoal');
+    }
+
+    public function reorder(AuthUser $authUser): bool
+    {
+        return $authUser->can('Reorder:CompanyGoal');
+    }
+
 }

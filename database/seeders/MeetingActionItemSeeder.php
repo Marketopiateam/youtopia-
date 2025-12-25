@@ -14,32 +14,27 @@ class MeetingActionItemSeeder extends Seeder
      */
     public function run(): void
     {
+        if (Meeting::count() === 0) {
+            $this->call(MeetingSeeder::class);
+        }
+        if (Employee::count() === 0) {
+            $this->call(EmployeeSeeder::class);
+        }
+
         $meetings = Meeting::all();
         $employees = Employee::all();
 
-        if ($meetings->isEmpty() || $employees->isEmpty()) {
-            $this->command->info('No meetings or employees found, skipping meeting action item seeding.');
-            return;
-        }
-
         foreach ($meetings as $meeting) {
-            MeetingActionItem::create([
-                'meeting_id' => $meeting->id,
-                'title' => 'Prepare Q1 Sales Report',
-                'description' => 'Gather data and generate report for the next meeting.',
-                'assigned_to_employee_id' => $employees->random()->id,
-                'due_date' => now()->addDays(7),
-                'status' => 'pending',
-            ]);
-
-            MeetingActionItem::create([
-                'meeting_id' => $meeting->id,
-                'title' => 'Follow up with Project Alpha team',
-                'description' => 'Check progress and address any blockers.',
-                'assigned_to_employee_id' => $employees->random()->id,
-                'due_date' => now()->addDays(5),
-                'status' => 'in_progress',
-            ]);
+            // Create 1-3 action items per meeting
+            for ($i = 0; $i < rand(1, 3); $i++) {
+                MeetingActionItem::factory()->make()->each(function ($item) use ($meeting, $employees) {
+                    $item->meeting_id = $meeting->id;
+                    $item->assigned_to_employee_id = $employees->random()->id;
+                    $item->save();
+                });
+            }
         }
+
+        $this->command->info('Meeting Action Items seeded.');
     }
 }
